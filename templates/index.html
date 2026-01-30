@@ -50,13 +50,19 @@
             display: flex;
         }
         .pane-expanded #leftPane {
-            width: 400px;
-            min-width: 400px;
+            width: 500px;
+            min-width: 500px;
+        }
+
+        /* Toggle visibility of controls based on selection state */
+        .controls-hidden #headerControls,
+        .controls-hidden #headerDivider {
+            display: none;
         }
 
         /* App Shell Layout */
         .app-shell {
-            max-width: 1440px;
+            max-width: 1400px;
             width: 100%;
             flex: 1;
             margin: 0 auto 24px auto;
@@ -66,13 +72,6 @@
             border: 1px solid #e2e8f0;
             overflow: hidden;
             display: flex;
-        }
-
-        @media (max-width: 1440px) {
-            .app-shell {
-                width: calc(100% - 48px);
-                margin: 0 24px 24px 24px;
-            }
         }
 
         @media (max-width: 768px) {
@@ -109,7 +108,13 @@
         input[type="date"], input[type="number"] {
             font-size: 11px;
             font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
         }
+        input[type="date"] { width: 115px; }
+        input[type="number"] { width: 55px; }
     </style>
 </head>
 <body class="pane-collapsed">
@@ -130,9 +135,6 @@
         </nav>
 
         <div class="flex items-center gap-4">
-            <button class="p-2 text-slate-400 hover:text-slate-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </button>
             <div class="h-9 w-9 bg-gradient-to-tr from-slate-200 to-slate-100 border border-slate-200 rounded-full flex items-center justify-center overflow-hidden">
                 <img src="https://ui-avatars.com/api/?name=User&background=f1f5f9&color=64748b" alt="Profile" class="w-full h-full object-cover">
             </div>
@@ -144,36 +146,44 @@
         
         <!-- Left Pane: Mail List -->
         <section id="leftPane" class="w-full flex flex-col border-r border-slate-200 bg-white z-10 transition-all duration-300">
-            <!-- Header with Title and Global Refresh -->
-            <div class="px-6 pt-6 pb-4 bg-white flex items-center justify-between">
-                <div class="flex flex-col">
-                    <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]" id="listHeader">Inbox</h2>
-                    <h3 class="text-lg font-bold text-slate-900" id="listTitle">Mailing Lists</h3>
+            <!-- Header with Title and Hidden/Visible Controls -->
+            <div class="px-6 py-4 border-b border-slate-100 bg-white flex items-center">
+                <!-- Title Block -->
+                <div class="flex flex-col shrink-0">
+                    <h2 class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em]">Inbox</h2>
+                    <h3 class="text-base font-bold text-slate-900 whitespace-nowrap" id="listTitle">Mailing Lists</h3>
                 </div>
-                <button onclick="fetchEmails()" class="p-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-all shadow-md shadow-slate-200 flex items-center gap-2 text-xs font-bold active:scale-95" title="Refresh Feed">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
-                    Refresh
-                </button>
-            </div>
 
-            <!-- Filter Controls -->
-            <div class="px-6 pb-6 border-b border-slate-100 grid grid-cols-3 gap-3">
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</label>
-                    <input type="date" id="fromDate" class="bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</label>
-                    <input type="date" id="toDate" class="bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Batch</label>
-                    <input type="number" id="batchSize" value="50" min="1" max="500" class="bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                <!-- Divider (Disappears when mail opened) -->
+                <div id="headerDivider" class="h-8 w-px bg-slate-100 shrink-0 mx-4"></div>
+
+                <!-- Filters & Refresh Container (Disappears when mail opened) -->
+                <div id="headerControls" class="flex-1 flex items-center justify-end gap-3">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">From</label>
+                        <input type="date" id="fromDate" class="focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">To</label>
+                        <input type="date" id="toDate" class="focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label class="text-[9px] font-bold text-slate-400 uppercase">Size</label>
+                        <input type="number" id="batchSize" value="5" min="1" max="500" class="focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    </div>
+
+                    <!-- Refresh Button -->
+                    <button onclick="fetchEmails()" class="p-2 bg-slate-900 text-white hover:bg-slate-800 rounded-lg transition-all shadow-sm flex items-center gap-1.5 text-[11px] font-bold active:scale-95 shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+                        Refresh
+                    </button>
                 </div>
             </div>
 
             <div id="emailList" class="flex-1 overflow-y-auto custom-scrollbar relative">
-                 <div id="loadingIndicator" class="absolute inset-0 bg-white flex flex-col items-center justify-center z-20">
+                 <div id="loadingIndicator" class="hidden absolute inset-0 bg-white flex flex-col items-center justify-center z-20">
                     <div class="spinner mb-4"></div>
                     <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">Scanning Subscriptions</p>
                  </div>
@@ -185,9 +195,9 @@
                     <p class="text-sm text-slate-500 mb-4">We couldn't sync with your inbox.</p>
                     <button onclick="fetchEmails()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors">Retry Connection</button>
                  </div>
+                 <div id="rowsContainer"></div>
             </div>
 
-            <!-- Redesigned Pagination Footer -->
             <div id="paginationFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white shrink-0">
                 <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest" id="pageDisplay">
                     Page 1 of 1
@@ -243,7 +253,8 @@
     </main>
 
     <script>
-        const listContainer = document.getElementById('emailList');
+        const leftPane = document.getElementById('leftPane');
+        const rowsContainer = document.getElementById('rowsContainer');
         const emailFrame = document.getElementById('emailFrame');
         const mailDate = document.getElementById('mailDate');
         const senderNameTop = document.getElementById('senderNameTop');
@@ -256,51 +267,35 @@
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         
-        // Filter elements
         const fromDateInput = document.getElementById('fromDate');
         const toDateInput = document.getElementById('toDate');
         const batchSizeInput = document.getElementById('batchSize');
 
         let emails = [];
-        let metadata = [];
-        let currentUnsubscribeUrl = "";
-        
-        // Pagination State
         let currentPage = 1;
         const itemsPerPage = 10;
 
         async function fetchEmails(retries = 3, delay = 1000) {
             loadingIndicator.classList.remove('hidden');
             errorState.classList.add('hidden');
+            rowsContainer.innerHTML = ''; 
+            document.getElementById('listTitle').innerText = 'Syncing...';
             
-            // Construct Query Params
-            const fromDate = fromDateInput.value;
-            const toDate = toDateInput.value;
-            const batchSize = batchSizeInput.value;
-            
-            let queryUrl = '/api/get-mails';
             const params = new URLSearchParams();
-            if (fromDate) params.append('from_date', fromDate);
-            if (toDate) params.append('to_date', toDate);
-            if (batchSize) params.append('batch_size', batchSize);
-            
-            if (params.toString()) queryUrl += `?${params.toString()}`;
+            if (fromDateInput.value) params.append('from_date', fromDateInput.value);
+            if (toDateInput.value) params.append('end_date', toDateInput.value);
+            if (batchSizeInput.value) params.append('batch_size', batchSizeInput.value);
             
             try {
-                const response = await fetch(queryUrl);
+                const response = await fetch(`/api/get-mails?${params.toString()}`);
                 if (!response.ok) throw new Error('Failed to fetch');
-                
                 const result = await response.json();
                 emails = result.data || [];
-                metadata = result.metadata || [{}];
                 currentPage = 1; 
                 renderList();
             } catch (error) {
-                if (retries > 0) {
-                    setTimeout(() => fetchEmails(retries - 1, delay * 2), delay);
-                } else {
-                    showError();
-                }
+                if (retries > 0) setTimeout(() => fetchEmails(retries - 1, delay * 2), delay);
+                else showError();
             } finally {
                 loadingIndicator.classList.add('hidden');
             }
@@ -313,63 +308,88 @@
 
         function closePane() {
             document.body.classList.replace('pane-expanded', 'pane-collapsed');
+            leftPane.classList.remove('controls-hidden'); // Re-show filters
             document.querySelectorAll('.email-row').forEach(el => el.classList.remove('active'));
+            updateHeaderTitle();
         }
 
-        function extractUnsubscribe(html) {
-            const div = document.createElement('div');
-            div.innerHTML = html;
-            const links = div.querySelectorAll('a');
-            for (let link of links) {
-                const text = link.innerText.toLowerCase();
-                const href = link.href.toLowerCase();
-                if (text.includes('unsubscribe') || href.includes('unsubscribe') || href.includes('manage_subscription')) {
-                    return link.href;
-                }
-            }
-            return "";
-        }
-
-        function renderEmail(globalIndex) {
+        async function renderEmail(globalIndex) {
             const email = emails[globalIndex];
-            currentUnsubscribeUrl = extractUnsubscribe(email.body);
-            
             document.body.classList.replace('pane-collapsed', 'pane-expanded');
+            leftPane.classList.add('controls-hidden'); 
             
             mailSubject.innerText = email.subject;
             senderNameTop.innerText = email.from || "Unknown Sender";
-            senderInitial.innerText = senderNameTop.innerText[0];
+            senderInitial.innerText = (email.from || "?")[0];
             mailDate.innerText = new Date(email.date).toLocaleDateString(undefined, { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
             });
 
+            // RIGHT PANE loader (inside iframe)
             const doc = emailFrame.contentWindow.document;
             doc.open();
             doc.write(`
                 <style>
-                    body { 
-                        margin: 0; 
-                        padding: 40px; 
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-                        overflow-x: hidden; 
-                        color: #334155; 
-                        background: white; 
-                        line-height: 1.6;
+                    body {
+                        margin: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        background: white;
                     }
-                    img { max-width: 100% !important; height: auto !important; border-radius: 12px; margin: 20px 0; }
-                    table { max-width: 100% !important; border-collapse: collapse; }
-                    a { color: #2563eb; font-weight: 600; text-decoration: underline; }
+                    .spinner {
+                        border: 3px solid #f1f5f9;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        border-left-color: #2563eb;
+                        animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
                 </style>
-                ${email.body}
+                <div class="spinner"></div>
             `);
             doc.close();
 
-            topUnsubscribeBtn.onclick = () => {
-                const url = currentUnsubscribeUrl || email.body.match(/https?:\/\/[^\s"'<>]+unsubscribe[^\s"'<>]*/i)?.[0];
-                if (url) window.open(url, '_blank');
-            };
+            try {
+                // Fetch body ONLY when needed
+                const response = await fetch(`/api/get-body?message_id=${email.id}`);
+                if (!response.ok) throw new Error("Failed to fetch body");
 
-            document.querySelectorAll('.email-row').forEach((el) => {
+                const result = await response.json();
+                const bodyHtml = result.body || "<p>No content available.</p>";
+
+                const doc = emailFrame.contentWindow.document;
+                doc.open();
+                doc.write(`
+                    <style>
+                        body{margin:0;padding:40px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+                        overflow-x:hidden;color:#334155;background:white;line-height:1.6;}
+                        img{max-width:100%!important;height:auto!important;border-radius:12px;margin:20px 0;}
+                        table{max-width:100%!important;border-collapse:collapse;}
+                        a{color:#2563eb;font-weight:600;text-decoration:underline;}
+                    </style>
+                    ${bodyHtml}
+                `);
+                doc.close();
+
+                topUnsubscribeBtn.onclick = () => {
+                    const url = bodyHtml.match(/https?:\/\/[^\s"'<>]+unsubscribe[^\s"'<>]*/i)?.[0];
+                    if (url) window.open(url, '_blank');
+                };
+
+            } catch (err) {
+                const doc = emailFrame.contentWindow.document;
+                doc.open();
+                doc.write(`<div style="padding:40px;color:red;">Failed to load message body.</div>`);
+                doc.close();
+            }
+
+            document.querySelectorAll('.email-row').forEach(el => {
                 el.classList.toggle('active', parseInt(el.dataset.index) === globalIndex);
             });
         }
@@ -382,37 +402,39 @@
 
         function changePage(direction) {
             const totalPages = Math.ceil(emails.length / itemsPerPage);
-            const nextP = currentPage + direction;
-            if (nextP >= 1 && nextP <= totalPages) {
-                currentPage = nextP;
+            if (currentPage + direction >= 1 && currentPage + direction <= totalPages) {
+                currentPage += direction;
                 renderList();
-                listContainer.scrollTop = 0;
+                document.getElementById('emailList').scrollTop = 0;
             }
         }
 
-        function renderList() {
-            const items = listContainer.querySelectorAll('.email-row');
-            items.forEach(item => item.remove());
-
+        function updateHeaderTitle() {
             const totalItems = emails.length;
-            const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = Math.min(start + itemsPerPage, totalItems);
-            const currentEmails = emails.slice(start, end);
-
             if (totalItems > 0) {
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = Math.min(start + itemsPerPage, totalItems);
                 document.getElementById('listTitle').innerText = `${start + 1}–${end} of ${totalItems}`;
             } else {
                 document.getElementById('listTitle').innerText = `0 Subscriptions`;
             }
+        }
 
+        function renderList() {
+            rowsContainer.innerHTML = '';
+            const totalItems = emails.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = Math.min(start + itemsPerPage, totalItems);
+            
+            updateHeaderTitle();
             pageDisplay.innerText = `Page ${currentPage} of ${totalPages}`;
             prevBtn.disabled = currentPage === 1;
             nextBtn.disabled = currentPage === totalPages || totalItems === 0;
 
-            currentEmails.forEach((email, sliceIndex) => {
+            emails.slice(start, end).forEach((email, sliceIndex) => {
                 const globalIndex = start + sliceIndex;
-                const previewText = stripHtml(email.body).substring(0, 100).trim();
+                const previewText = (email.snippet || "").substring(0, 100).trim();
                 const row = document.createElement('div');
                 row.className = `email-row cursor-pointer p-6 flex items-start gap-4`;
                 row.dataset.index = globalIndex;
@@ -430,7 +452,7 @@
                         <div class="text-xs text-slate-400 line-clamp-1 leading-relaxed">${previewText}...</div>
                     </div>
                 `;
-                listContainer.appendChild(row);
+                rowsContainer.appendChild(row);
             });
         }
 

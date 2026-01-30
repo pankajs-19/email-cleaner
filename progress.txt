@@ -1,0 +1,32 @@
+Improvements:
+    - Extract body is recursive - check if it is efficient and necessary - is there another way?
+
+    - Currently email body is fetched by calling the get-body api. Cache bodies to avoid repeat API calls.
+
+    - make the date selceter as a single dropdown and can select from and end date together in one as a tube.
+
+
+A. The "Inbox Cleanup"
+    Instead of just showing a list, add logic to help the user decide what to delete.
+
+    Frequency Score: Show how many emails that specific sender has sent in the last 30 days.
+
+    "Last Read" Detection: If you can see which emails have been "opened" vs "unread," you can flag 
+    senders where the user has a 0% open rate.
+
+    One-Click Bulk Delete: Once they click unsubscribe, offer a button to "Delete all 452 previous emails 
+    from this sender" to instantly free up storage.
+
+B. The "Screener" or "Auto-Trash"
+    If an unsubscribe link is broken (which happens often with spam), provide a "Shield" feature.
+
+    The Logic: If the user clicks "Block" in your app, your script creates a Filter (using the Gmail API) that automatically 
+    sends all future emails from that address straight to the Trash.
+
+C. Dashboard & Analytics
+    Storage Savings: Show a counter of how much space (in MB/GB) was saved by deleting the newsletters found.
+
+    Category View: Group senders by type (e.g., "Shopping," "Social Media," "News") using simple keyword matching in the sender's domain.
+
+
+get the list of mail with label subject and metadata - get body asynchronously later
